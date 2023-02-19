@@ -3,6 +3,7 @@ package spec.demo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -79,6 +80,13 @@ public class MatrixTest {
   @DisplayName("选中部分规格，剩余的活跃规格")
   void should_valid_match_specs(List<Spec> selectedSpecs, List<Spec> expectedValidSpecs) {
     assertIterableEquals(expectedValidSpecs, matrix.selected(selectedSpecs).validSpec());
+  }
+  
+  @Test
+  void shou_not_match_any_spec_if_empty_sku_list_given() {
+    SpecMatrix matrix = new SpecMatrix(specs, List.of());
+    
+    assertIterableEquals(List.of(), matrix.validSpec());
   }
   
   static Stream<Arguments> spec_match_data() {
