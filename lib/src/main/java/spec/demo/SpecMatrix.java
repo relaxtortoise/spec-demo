@@ -35,22 +35,23 @@ public class SpecMatrix {
       this.matrix.put(specs.get(i), new MatrixItem(i));
     }
     // 构造连通图
-    buildSpecMatrix(specs, skus);
+    buildSpecMatrix(skus);
   }
   
   public SpecMatrix resetSkus(List<Sku> skus) {
     // 重置连通图
     this.matrix.values().forEach(MatrixItem::resetMask);
     // 重新构造连通图
-    buildSpecMatrix(this.matrix.keySet(), skus);
+    buildSpecMatrix(skus);
     return this;
   }
   
-  private void buildSpecMatrix(Collection<Spec> specs, List<Sku> skus) {
-    // 相同属性之间默认能够互通
-    groupedByAttr(specs).forEach(this::contactWithOthers);
+  private void buildSpecMatrix(List<Sku> skus) {
     // Sku规格连通图
     skus.forEach(sku -> contactWithOthers(sku.getSpecs()));
+    // 将Sku属性按照类别分组分别进行连通
+    Set<Spec> skuSpecs = skus.stream().flatMap(sku -> sku.getSpecs().stream()).collect(Collectors.toSet());
+    groupedByAttr(skuSpecs).forEach(this::contactWithOthers);
     // 构造Sku Mask
     this.skus = skus.stream().map(MaskedSku::new).toList();
     initSelectedMask();
@@ -74,6 +75,7 @@ public class SpecMatrix {
       for (Spec col : specList) {
         if (!row.equals(col)) {
           matrix.get(row).contactWith(matrix.get(col));
+          matrix.get(col).contactWith(matrix.get(row));
         }
       }
     }
@@ -188,7 +190,6 @@ public class SpecMatrix {
     
     public void contactWith(MatrixItem other) {
       this.mask |= other.getIndexNumber();
-      other.mask |= this.getIndexNumber();
     }
     
     private long getIndexNumber() {
